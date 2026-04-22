@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "cleanUrls": true,
+  "functions": {
+    "api/*.js": {
+      "maxDuration": 10
+    }
+  }
+}

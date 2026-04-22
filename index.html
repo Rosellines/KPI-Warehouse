@@ -1,0 +1,2236 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leaderboard KPI Warehouse</title>
+  <style>
+    :root {
+      --bg: #f4efe7;
+      --surface: rgba(255, 250, 243, 0.92);
+      --surface-strong: #fffaf2;
+      --surface-grad-start: rgba(255, 255, 255, 0.92);
+      --surface-grad-end: rgba(248, 239, 224, 0.92);
+      --card-grad-start: rgba(255, 255, 255, 0.96);
+      --card-grad-end: rgba(243, 232, 213, 0.92);
+      --text: #1e1c18;
+      --muted: #6d655a;
+      --gold: #d9a328;
+      --silver: #8e9aa6;
+      --bronze: #b8703c;
+      --accent: #1f6f5f;
+      --accent-soft: #d8ece6;
+      --line: rgba(30, 28, 24, 0.08);
+      --shadow: 0 24px 60px rgba(73, 53, 30, 0.14);
+      --theme-glow-left: rgba(217, 163, 40, 0.18);
+      --theme-glow-right: rgba(31, 111, 95, 0.18);
+      --theme-bg-start: #f8f1e8;
+      --theme-bg-mid: #efe6d8;
+      --theme-bg-end: #e4dccf;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, var(--theme-glow-left), transparent 30%),
+        radial-gradient(circle at top right, var(--theme-glow-right), transparent 28%),
+        linear-gradient(160deg, var(--theme-bg-start) 0%, var(--theme-bg-mid) 46%, var(--theme-bg-end) 100%);
+      padding: 0;
+      transition: background 0.45s ease, color 0.3s ease;
+    }
+
+    .shell {
+      width: 100%;
+      min-height: 100vh;
+      background: linear-gradient(145deg, var(--surface) 0%, var(--surface-grad-start) 52%, var(--surface-grad-end) 100%);
+      backdrop-filter: blur(12px);
+      border: 0;
+      border-radius: 0;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      animation: shellFloat 0.9s ease both;
+      transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 34px;
+      background: rgba(255, 250, 243, 0.82);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(30, 28, 24, 0.08);
+    }
+
+    .topbar-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .user-input {
+      min-width: 180px;
+      border: 1px solid rgba(30, 28, 24, 0.1);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font: inherit;
+      background: rgba(255, 255, 255, 0.76);
+      color: var(--text);
+      outline: none;
+    }
+
+    .user-input:focus {
+      box-shadow: inset 0 0 0 1px rgba(31, 111, 95, 0.28);
+      border-color: rgba(31, 111, 95, 0.22);
+    }
+
+    .mode-indicator {
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(31, 111, 95, 0.1);
+      color: var(--accent);
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .editor-btn {
+      border: 0;
+      border-radius: 999px;
+      padding: 10px 16px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      color: #ffffff;
+      background: linear-gradient(135deg, var(--accent), #144e42);
+      box-shadow: 0 12px 20px rgba(31, 111, 95, 0.18);
+      transition: transform 0.22s ease, box-shadow 0.22s ease, opacity 0.22s ease;
+    }
+
+    .editor-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 26px rgba(31, 111, 95, 0.22);
+    }
+
+    .secondary-btn {
+      border: 1px solid rgba(30, 28, 24, 0.08);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.76);
+      transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+    }
+
+    .secondary-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 22px rgba(73, 53, 30, 0.1);
+      border-color: rgba(31, 111, 95, 0.22);
+    }
+
+    .danger-btn {
+      color: #9f2d1c;
+      background: rgba(255, 245, 242, 0.92);
+      border-color: rgba(159, 45, 28, 0.16);
+    }
+
+    .save-status {
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+
+    .integration-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .integration-input {
+      min-width: min(420px, 100%);
+      flex: 1 1 320px;
+      border: 1px solid rgba(30, 28, 24, 0.1);
+      border-radius: 16px;
+      padding: 12px 14px;
+      font: inherit;
+      background: rgba(255, 255, 255, 0.76);
+      color: var(--text);
+      outline: none;
+    }
+
+    .integration-input:focus {
+      box-shadow: inset 0 0 0 1px rgba(31, 111, 95, 0.28);
+      border-color: rgba(31, 111, 95, 0.22);
+    }
+
+    .integration-note {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    .hero {
+      padding: 34px 34px 20px;
+      position: relative;
+      isolation: isolate;
+    }
+
+    .hero-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+    }
+
+    .brand-mark {
+      width: 128px;
+      height: 128px;
+      flex: 0 0 128px;
+      border-radius: 28px;
+      box-shadow: 0 20px 34px rgba(31, 111, 95, 0.18);
+    }
+
+    .hero-copy {
+      min-width: 0;
+      padding-top: 4px;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .controls-label {
+      font-size: 0.86rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .theme-switcher {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .theme-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(30, 28, 24, 0.08);
+      background: rgba(255, 255, 255, 0.72);
+      color: var(--text);
+      font: inherit;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease, background 0.22s ease;
+    }
+
+    .theme-btn:hover {
+      transform: translateY(-2px) scale(1.01);
+      box-shadow: 0 14px 28px rgba(73, 53, 30, 0.12);
+      border-color: rgba(31, 111, 95, 0.26);
+    }
+
+    .theme-btn.active {
+      background: rgba(31, 111, 95, 0.12);
+      border-color: rgba(31, 111, 95, 0.26);
+    }
+
+    .theme-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.4);
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 16px;
+      border-radius: 24px;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.56), rgba(255, 255, 255, 0.18));
+      z-index: -1;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(31, 111, 95, 0.1);
+      color: var(--accent);
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .hero h1 {
+      margin: 18px 0 10px;
+      font-size: clamp(2rem, 4vw, 3.7rem);
+      line-height: 1;
+      letter-spacing: -0.04em;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 720px;
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.7;
+    }
+
+    .content {
+      display: grid;
+      grid-template-columns: 1.1fr 1.35fr;
+      gap: 22px;
+      padding: 0 34px 34px;
+    }
+
+    .panel {
+      background: linear-gradient(145deg, var(--surface-strong) 0%, var(--card-grad-start) 46%, var(--card-grad-end) 100%);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 22px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+      transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.3s ease;
+    }
+
+    .panel:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 18px 34px rgba(61, 44, 24, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.75);
+    }
+
+    .panel-title {
+      margin: 0 0 18px;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+    }
+
+    .podium {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      align-items: end;
+      gap: 14px;
+      min-height: 360px;
+    }
+
+    .winner {
+      border-radius: 22px 22px 10px 10px;
+      padding: 18px 16px;
+      position: relative;
+      color: white;
+      box-shadow: 0 18px 35px rgba(0, 0, 0, 0.12);
+      animation: rise 0.8s ease both;
+      overflow: hidden;
+      transition: transform 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease;
+    }
+
+    .winner-photo {
+      width: 78px;
+      height: 78px;
+      display: block;
+      object-fit: cover;
+      border-radius: 50%;
+      margin-bottom: 14px;
+      border: 3px solid rgba(255, 255, 255, 0.72);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.16);
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    .winner-avatar,
+    .list-avatar {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    .winner-avatar {
+      width: 78px;
+      height: 78px;
+      border-radius: 50%;
+      margin-bottom: 14px;
+      border: 3px solid rgba(255, 255, 255, 0.72);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.16);
+    }
+
+    .winner-avatar .winner-photo,
+    .list-avatar .list-photo {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      border: 0;
+      box-shadow: none;
+      background: transparent;
+    }
+
+    .avatar-fallback {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      color: rgba(255, 255, 255, 0.94);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06));
+    }
+
+    .list-avatar .avatar-fallback {
+      color: var(--accent);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.66));
+    }
+
+    .winner-avatar.is-fallback .avatar-fallback,
+    .list-avatar.is-fallback .avatar-fallback {
+      display: inline-flex;
+    }
+
+    .winner-avatar.is-fallback .winner-photo,
+    .list-avatar.is-fallback .list-photo {
+      display: none;
+    }
+
+    .winner::before {
+      content: "";
+      position: absolute;
+      inset: -40% auto auto -20%;
+      width: 70px;
+      height: 180%;
+      transform: rotate(18deg) translateX(-130px);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0));
+      transition: transform 0.45s ease;
+      pointer-events: none;
+    }
+
+    .winner:nth-child(1) {
+      animation-delay: 0.08s;
+    }
+
+    .winner:nth-child(2) {
+      animation-delay: 0.18s;
+    }
+
+    .winner:nth-child(3) {
+      animation-delay: 0.28s;
+    }
+
+    .winner.rank-2 {
+      min-height: 220px;
+      background: linear-gradient(180deg, #a5b0bb, #7f8a95);
+    }
+
+    .winner.rank-1 {
+      min-height: 305px;
+      background: linear-gradient(180deg, #efc657, #c89115);
+    }
+
+    .winner.rank-3 {
+      min-height: 170px;
+      background: linear-gradient(180deg, #d29b73, #a66237);
+    }
+
+    .badge {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 1.15rem;
+      font-weight: 800;
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      margin-bottom: 14px;
+    }
+
+    .winner h2 {
+      margin: 0 0 8px;
+      font-size: 1.2rem;
+      line-height: 1.2;
+    }
+
+    .winner p {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.88);
+      line-height: 1.5;
+      font-size: 0.95rem;
+    }
+
+    .winner.empty {
+      border: 2px dashed rgba(255, 255, 255, 0.45);
+    }
+
+    .winner.empty p {
+      color: rgba(255, 255, 255, 0.75);
+    }
+
+    .winner:hover {
+      transform: translateY(-8px) scale(1.015);
+      box-shadow: 0 28px 42px rgba(0, 0, 0, 0.16);
+      filter: saturate(1.05);
+    }
+
+    .winner:hover::before {
+      transform: rotate(18deg) translateX(250px);
+    }
+
+    .list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 68px 1fr auto auto;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, var(--card-grad-start) 0%, var(--surface-strong) 52%, var(--card-grad-end) 100%);
+      border: 1px solid rgba(30, 28, 24, 0.06);
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .row:hover {
+      transform: translateY(-4px) scale(1.01);
+      box-shadow: 0 16px 30px rgba(61, 44, 24, 0.1);
+    }
+
+    .place {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--accent);
+      background: var(--accent-soft);
+      transition: transform 0.22s ease, background 0.3s ease, color 0.3s ease;
+    }
+
+    .row:hover .place {
+      transform: rotate(-6deg) scale(1.05);
+    }
+
+    .identity strong {
+      display: block;
+      font-size: 1rem;
+    }
+
+    .identity-main {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .list-photo {
+      width: 48px;
+      height: 48px;
+      flex: 0 0 48px;
+      object-fit: cover;
+      border-radius: 14px;
+      border: 2px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 0 8px 18px rgba(61, 44, 24, 0.12);
+      background: rgba(255, 255, 255, 0.66);
+    }
+
+    .list-avatar {
+      width: 48px;
+      height: 48px;
+      flex: 0 0 48px;
+      border-radius: 14px;
+      border: 2px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 0 8px 18px rgba(61, 44, 24, 0.12);
+      background: rgba(255, 255, 255, 0.66);
+    }
+
+    .name-block {
+      min-width: 0;
+    }
+
+    .identity span {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .status {
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+
+    .points {
+      min-width: 88px;
+      padding: 8px 12px;
+      border-radius: 14px;
+      text-align: center;
+      font-size: 0.9rem;
+      font-weight: 800;
+      color: var(--text);
+      background: rgba(217, 163, 40, 0.12);
+      border: 1px solid rgba(217, 163, 40, 0.16);
+      transition: transform 0.22s ease, background 0.3s ease;
+    }
+
+    .row:hover .points {
+      transform: scale(1.05);
+    }
+
+    .status.top {
+      color: #9a6a00;
+      background: rgba(217, 163, 40, 0.14);
+    }
+
+    .status.rise {
+      color: var(--accent);
+      background: rgba(31, 111, 95, 0.12);
+    }
+
+    .status.empty {
+      color: #8c684d;
+      background: rgba(184, 112, 60, 0.12);
+    }
+
+    .footer-note {
+      padding: 0 34px 28px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .forms-section {
+      padding: 0 34px 34px;
+    }
+
+    .form-intro {
+      margin-bottom: 18px;
+    }
+
+    .form-intro p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .sheet-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .sheet-page {
+      background: #ffffff;
+      border: 1px solid #1f1f1f;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 18px 34px rgba(31, 33, 38, 0.1);
+    }
+
+    .sheet-scroll {
+      overflow-x: auto;
+      background: linear-gradient(180deg, #ffffff 0%, #fbfbfb 100%);
+    }
+
+    .kpi-sheet {
+      width: 100%;
+      min-width: 1460px;
+      border-collapse: collapse;
+      color: #111111;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #ffffff;
+    }
+
+    .kpi-sheet td,
+    .kpi-sheet th {
+      border: 1px solid #202020;
+      padding: 4px 6px;
+      font-size: 12px;
+      vertical-align: middle;
+    }
+
+    .kpi-sheet .sheet-code {
+      width: 130px;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .kpi-sheet .sheet-title {
+      text-align: center;
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      padding: 14px 10px;
+    }
+
+    .kpi-sheet .meta-label {
+      width: 74px;
+      font-weight: 700;
+      background: #f6f6f6;
+    }
+
+    .kpi-sheet .meta-value {
+      font-weight: 600;
+      background: #ffffff;
+    }
+
+    .meta-input {
+      width: 100%;
+      border: 0;
+      outline: none;
+      background: transparent;
+      color: #111111;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 0;
+    }
+
+    .meta-input.period-input {
+      font-weight: 600;
+    }
+
+    .kpi-sheet .meta-fill {
+      background: #ffffff;
+    }
+
+    .kpi-sheet .criteria-head {
+      text-align: center;
+      font-weight: 700;
+      background: #f2f2f2;
+      line-height: 1.3;
+    }
+
+    .kpi-sheet .tgl-head {
+      width: 56px;
+    }
+
+    .kpi-sheet .day-cell {
+      width: 56px;
+      text-align: center;
+      font-weight: 700;
+      background: #fcfcfc;
+    }
+
+    .kpi-sheet .score-cell {
+      height: 22px;
+      background: #ffffff;
+    }
+
+    .kpi-sheet .employee-highlight {
+      color: #0f5f52;
+      font-weight: 800;
+    }
+
+    .sheet-caption {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border-top: 1px solid rgba(31, 31, 31, 0.08);
+      background: linear-gradient(135deg, #f9fbfb, #eef6f3);
+      color: #4c5c58;
+      font-size: 0.92rem;
+    }
+
+    .sheet-caption strong {
+      color: #1f2a28;
+    }
+
+    .weight-note {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .weight-pill {
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(31, 111, 95, 0.1);
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .leaderboard-meta {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .analytics-grid {
+      display: grid;
+      grid-template-columns: 0.95fr 1.25fr;
+      gap: 22px;
+      padding: 0 34px 22px;
+    }
+
+    .search-box {
+      width: 100%;
+      border: 1px solid rgba(30, 28, 24, 0.08);
+      border-radius: 18px;
+      padding: 14px 16px;
+      font: inherit;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.76);
+      outline: none;
+    }
+
+    .search-box:focus {
+      box-shadow: inset 0 0 0 1px rgba(31, 111, 95, 0.28);
+      border-color: rgba(31, 111, 95, 0.24);
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .summary-card {
+      padding: 16px;
+      border-radius: 18px;
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(237, 247, 242, 0.7));
+      border: 1px solid rgba(30, 28, 24, 0.06);
+    }
+
+    .summary-label {
+      display: block;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .summary-value {
+      display: block;
+      margin-top: 10px;
+      font-size: 1.7rem;
+      font-weight: 800;
+      line-height: 1;
+      color: var(--text);
+    }
+
+    .summary-subtext {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .chart-wrap {
+      margin-top: 16px;
+    }
+
+    .chart-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .chart-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .chart-row {
+      display: grid;
+      grid-template-columns: minmax(120px, 200px) 1fr 70px;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .chart-name {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .chart-bar-track {
+      height: 14px;
+      border-radius: 999px;
+      background: rgba(31, 111, 95, 0.08);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .chart-bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent), #d9a328);
+      box-shadow: 0 8px 18px rgba(31, 111, 95, 0.2);
+      transition: width 0.3s ease;
+    }
+
+    .chart-score {
+      font-size: 0.92rem;
+      font-weight: 800;
+      color: var(--text);
+      text-align: right;
+    }
+
+    .search-result {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.6;
+    }
+
+    .score-input {
+      width: 100%;
+      min-width: 44px;
+      border: 0;
+      outline: none;
+      background: transparent;
+      color: #111111;
+      text-align: center;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      appearance: textfield;
+      -moz-appearance: textfield;
+    }
+
+    .viewer-mode .score-input {
+      cursor: default;
+      color: #3b3b3b;
+      pointer-events: none;
+    }
+
+    .viewer-mode .meta-input {
+      color: #3b3b3b;
+      pointer-events: none;
+    }
+
+    .viewer-mode .score-input:focus {
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .viewer-mode .meta-input:focus {
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .editor-mode .score-input {
+      background: rgba(31, 111, 95, 0.04);
+    }
+
+    .editor-mode .meta-input {
+      background: rgba(31, 111, 95, 0.04);
+    }
+
+    .access-note {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.7;
+    }
+
+    .score-input::-webkit-outer-spin-button,
+    .score-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .score-input:focus {
+      background: rgba(31, 111, 95, 0.08);
+      box-shadow: inset 0 0 0 1px rgba(31, 111, 95, 0.28);
+    }
+
+    .meta-input:focus {
+      background: rgba(31, 111, 95, 0.08);
+      box-shadow: inset 0 0 0 1px rgba(31, 111, 95, 0.28);
+    }
+
+    .spark {
+      display: inline-block;
+      animation: pulse 1.8s ease-in-out infinite;
+      transform-origin: center;
+    }
+
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(22px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes shellFloat {
+      from {
+        opacity: 0;
+        transform: translateY(24px) scale(0.985);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes pulse {
+      0%,
+      100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.16);
+      }
+    }
+
+    @media (max-width: 860px) {
+      .content {
+        grid-template-columns: 1fr;
+      }
+
+      .podium {
+        min-height: auto;
+      }
+
+      .topbar {
+        padding-left: 18px;
+        padding-right: 18px;
+      }
+    }
+
+    @media (max-width: 620px) {
+      body {
+        padding: 0;
+      }
+
+      .hero,
+      .content,
+      .forms-section,
+      .footer-note {
+        padding-left: 18px;
+        padding-right: 18px;
+      }
+
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .podium {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-top {
+        flex-direction: column;
+      }
+
+      .brand-mark {
+        width: 92px;
+        height: 92px;
+        flex-basis: 92px;
+      }
+
+      .winner {
+        min-height: auto !important;
+        border-radius: 22px;
+      }
+
+      .row {
+        grid-template-columns: 58px 1fr;
+      }
+
+      .points,
+      .status {
+        grid-column: 2;
+        justify-self: start;
+      }
+
+      .sheet-caption {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+        padding: 0;
+      }
+
+      .shell {
+        width: 100%;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+        background: #ffffff;
+      }
+
+      .hero,
+      .content,
+      .form-intro,
+      .footer-note {
+        display: none;
+      }
+
+      .forms-section {
+        padding: 0;
+      }
+
+      .sheet-grid {
+        gap: 0;
+      }
+
+      .sheet-page {
+        break-after: page;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+        page-break-after: always;
+      }
+
+      .sheet-scroll {
+        overflow: visible;
+      }
+
+      .sheet-caption {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body class="viewer-mode">
+  <main class="shell">
+    <div class="topbar">
+      <div class="topbar-title">
+        <span>KPI Warehouse Dashboard</span>
+      </div>
+      <div class="topbar-actions">
+        <input class="user-input" id="userKeyInput" type="text" placeholder="User / perangkat" value="default">
+        <button class="secondary-btn" id="backupBtn" type="button">Backup JSON</button>
+        <button class="secondary-btn" id="restoreBtn" type="button">Restore JSON</button>
+        <button class="secondary-btn danger-btn" id="resetBtn" type="button">Reset Data</button>
+        <input id="restoreFileInput" type="file" accept="application/json" hidden>
+        <span class="mode-indicator" id="modeIndicator">Mode Viewer</span>
+        <button class="editor-btn" id="editorToggle" type="button">Masuk Editor</button>
+        <span class="save-status" id="saveStatus">Belum ada perubahan</span>
+      </div>
+    </div>
+    <section class="hero">
+      <div class="hero-top">
+        <img class="brand-mark" src="logo.png" alt="Logo leaderboard warehouse" width="128" height="128">
+        <div class="hero-copy">
+          <div class="eyebrow">Warehouse KPI Board</div>
+          <h1>Leaderboard KPI Karyawan Warehouse</h1>
+          <p>
+            Papan peringkat performa tim warehouse. Tiga posisi teratas ditampilkan sebagai podium,
+            lalu disusul daftar ranking lengkap sampai urutan 10 beserta poin KPI.
+          </p>
+          <div class="controls">
+            <span class="controls-label">Pilih Warna</span>
+            <div class="theme-switcher" aria-label="Pilihan warna tampilan">
+              <button class="theme-btn active" type="button" data-theme="warehouse">
+                <span class="theme-dot" style="background: linear-gradient(135deg, #d9a328, #1f6f5f);"></span>
+                Warehouse
+              </button>
+              <button class="theme-btn" type="button" data-theme="ocean">
+                <span class="theme-dot" style="background: linear-gradient(135deg, #2c7fb8, #123c69);"></span>
+                Ocean
+              </button>
+              <button class="theme-btn" type="button" data-theme="sunset">
+                <span class="theme-dot" style="background: linear-gradient(135deg, #f2994a, #c94b4b);"></span>
+                Sunset
+              </button>
+              <button class="theme-btn" type="button" data-theme="forest">
+                <span class="theme-dot" style="background: linear-gradient(135deg, #4caf50, #1b4332);"></span>
+                Forest
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content">
+      <article class="panel">
+        <h2 class="panel-title">Top Podium</h2>
+        <div class="leaderboard-meta">
+          Leaderboard dihitung otomatis dari form penilaian. Setiap task bernilai <strong>1 poin</strong>,
+          sedangkan <strong>Tanggung Jawab Pekerjaan</strong> bernilai <strong>2 poin</strong>.
+        </div>
+        <div class="podium" id="podiumBoard"></div>
+      </article>
+
+      <article class="panel">
+        <h2 class="panel-title">Ranking 1-10</h2>
+        <div class="list" id="rankingBoard"></div>
+      </article>
+    </section>
+
+    <section class="analytics-grid">
+      <article class="panel">
+        <h2 class="panel-title">Pencarian Nama</h2>
+        <input
+          class="search-box"
+          id="employeeSearchInput"
+          type="search"
+          placeholder="Cari nama karyawan..."
+          autocomplete="off"
+        >
+        <div class="search-result" id="searchResultText">
+          Ketik nama karyawan untuk memfilter ranking, grafik, dan form penilaian.
+        </div>
+      </article>
+
+      <article class="panel">
+        <h2 class="panel-title">Rekap Otomatis</h2>
+        <div class="summary-grid">
+          <div class="summary-card">
+            <span class="summary-label">Total Karyawan</span>
+            <span class="summary-value" id="summaryEmployees">0</span>
+            <span class="summary-subtext">Jumlah form aktif</span>
+          </div>
+          <div class="summary-card">
+            <span class="summary-label">Total Poin</span>
+            <span class="summary-value" id="summaryPoints">0</span>
+            <span class="summary-subtext">Akumulasi seluruh KPI</span>
+          </div>
+          <div class="summary-card">
+            <span class="summary-label">Rata-rata</span>
+            <span class="summary-value" id="summaryAverage">0</span>
+            <span class="summary-subtext">Rata-rata poin per karyawan</span>
+          </div>
+          <div class="summary-card">
+            <span class="summary-label">Poin Tertinggi</span>
+            <span class="summary-value" id="summaryHighest">0</span>
+            <span class="summary-subtext" id="summaryHighestName">Belum ada data</span>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="forms-section" style="padding-top: 0;">
+      <article class="panel">
+        <h2 class="panel-title">Grafik Performa</h2>
+        <div class="chart-head">
+          <span>Menampilkan 10 performa tertinggi berdasarkan total poin saat ini.</span>
+          <span id="chartMetaText">Belum ada data</span>
+        </div>
+        <div class="chart-wrap">
+          <div class="chart-list" id="performanceChart"></div>
+        </div>
+      </article>
+    </section>
+
+    <section class="forms-section">
+      <article class="panel form-intro">
+        <h2 class="panel-title">Form Penilaian Karyawan</h2>
+        <p>
+          Di bawah ini tersedia lembar penilaian KPI untuk seluruh karyawan warehouse. Setiap karyawan
+          memiliki satu halaman form tersendiri dengan format tabel harian seperti contoh yang kamu kirim.
+        </p>
+        <div class="weight-note">
+          <span class="weight-pill">Task standar = 1 poin</span>
+          <span class="weight-pill">Tanggung Jawab Pekerjaan = 2 poin</span>
+          <span class="weight-pill">Isi angka pada tabel untuk update leaderboard</span>
+        </div>
+        <div class="access-note">
+          Secara default halaman berada di mode lihat. Hanya user yang masuk lewat akses editor yang bisa
+          mengubah angka pada tabel, sedangkan user lain hanya bisa melihat hasil penilaian dan leaderboard.
+        </div>
+        <div class="integration-bar">
+          <button class="secondary-btn" id="loadCloudBtn" type="button">Load Cloud</button>
+          <button class="secondary-btn" id="saveCloudBtn" type="button">Save Cloud</button>
+          <button class="secondary-btn danger-btn" id="resetCloudBtn" type="button">Reset Cloud</button>
+        </div>
+        <div class="integration-note">
+          Saat di-deploy ke Vercel, tombol cloud akan membaca dan menulis data JSON user aktif ke Vercel Blob
+          melalui endpoint API project ini.
+        </div>
+      </article>
+
+      <div class="sheet-grid" id="sheetGrid"></div>
+    </section>
+
+    <div class="footer-note">
+      Tampilan ini dibuat sebagai halaman statis dan bisa langsung dibuka dari file <strong>index.html</strong>.
+    </div>
+  </main>
+  <script>
+    const employees = [
+      { name: "MAMAN SUHERMAN" },
+      { name: "ARI SUPENDI" },
+      { name: "RAKA N. A" },
+      { name: "NABILA WULANDARI" },
+      { name: "AZIZ A." },
+      { name: "DEL PIERO" },
+      { name: "FAHRUL E." },
+      { name: "YAYAN MAULANA" },
+      { name: "M. REYNALDI" },
+      { name: "RIZKY" },
+      { name: "D. TRILAKSONO" },
+      { name: "ANNA" },
+      { name: "Rifky H." },
+      { name: "DINDA AYU A." },
+      { name: "FIRZA S.S" },
+      { name: "DELLA" },
+      { name: "MAULANA A." },
+      { name: "YUDHA E. P" },
+      { name: "ALIF" },
+      { name: "MUNAWIR" },
+      { name: "FAJAR" },
+      { name: "ABIL" },
+      { name: "WAHYU Y." },
+      { name: "SHEVA" },
+      { name: "EKO J" },
+      { name: "BEDI" },
+      { name: "AGUS" },
+      { name: "RAYA" }
+    ];
+
+    const criteria = [
+      "KETEPATAN INPUT DATA",
+      "KETEPATAN WAKTU LAPORAN",
+      "KERAPIHAN ARSIP",
+      "RESPON KOMUNIKASI",
+      "KEHADIRAN",
+      "PENCATATAN IN-OUT BARANG",
+      "DOKUMENTASI IN-OUT BARANG",
+      "PENGISIAN STOCK CARD",
+      "TANGGUNG JAWAB PEKERJAAN"
+    ];
+
+    const criteriaWeights = [1, 1, 1, 1, 1, 1, 1, 1, 2];
+
+    const themes = {
+      warehouse: {
+        "--surface": "rgba(255, 250, 243, 0.92)",
+        "--surface-strong": "#fffaf2",
+        "--surface-grad-start": "rgba(255, 248, 238, 0.96)",
+        "--surface-grad-end": "rgba(234, 244, 239, 0.94)",
+        "--card-grad-start": "rgba(255, 252, 246, 0.98)",
+        "--card-grad-end": "rgba(237, 247, 242, 0.95)",
+        "--text": "#1e1c18",
+        "--muted": "#6d655a",
+        "--accent": "#1f6f5f",
+        "--accent-soft": "#d8ece6",
+        "--line": "rgba(30, 28, 24, 0.08)",
+        "--shadow": "0 24px 60px rgba(73, 53, 30, 0.14)",
+        "--theme-glow-left": "rgba(217, 163, 40, 0.18)",
+        "--theme-glow-right": "rgba(31, 111, 95, 0.18)",
+        "--theme-bg-start": "#f8f1e8",
+        "--theme-bg-mid": "#efe6d8",
+        "--theme-bg-end": "#e4dccf"
+      },
+      ocean: {
+        "--surface": "rgba(244, 251, 255, 0.92)",
+        "--surface-strong": "#f9fdff",
+        "--surface-grad-start": "rgba(241, 249, 255, 0.96)",
+        "--surface-grad-end": "rgba(221, 238, 248, 0.95)",
+        "--card-grad-start": "rgba(249, 253, 255, 0.98)",
+        "--card-grad-end": "rgba(224, 239, 249, 0.96)",
+        "--text": "#17324d",
+        "--muted": "#5d7287",
+        "--accent": "#1f6ea8",
+        "--accent-soft": "#dcedf8",
+        "--line": "rgba(23, 50, 77, 0.08)",
+        "--shadow": "0 24px 60px rgba(31, 110, 168, 0.16)",
+        "--theme-glow-left": "rgba(44, 127, 184, 0.18)",
+        "--theme-glow-right": "rgba(18, 60, 105, 0.2)",
+        "--theme-bg-start": "#eef8ff",
+        "--theme-bg-mid": "#dcecf7",
+        "--theme-bg-end": "#caddea"
+      },
+      sunset: {
+        "--surface": "rgba(255, 247, 241, 0.93)",
+        "--surface-strong": "#fffaf6",
+        "--surface-grad-start": "rgba(255, 245, 238, 0.97)",
+        "--surface-grad-end": "rgba(248, 224, 211, 0.95)",
+        "--card-grad-start": "rgba(255, 250, 246, 0.98)",
+        "--card-grad-end": "rgba(251, 229, 217, 0.96)",
+        "--text": "#412b24",
+        "--muted": "#84675d",
+        "--accent": "#c45b38",
+        "--accent-soft": "#f8dfd1",
+        "--line": "rgba(65, 43, 36, 0.08)",
+        "--shadow": "0 24px 60px rgba(201, 75, 75, 0.16)",
+        "--theme-glow-left": "rgba(242, 153, 74, 0.2)",
+        "--theme-glow-right": "rgba(201, 75, 75, 0.18)",
+        "--theme-bg-start": "#fff2e6",
+        "--theme-bg-mid": "#f8e1d4",
+        "--theme-bg-end": "#efd3c8"
+      },
+      forest: {
+        "--surface": "rgba(245, 251, 245, 0.92)",
+        "--surface-strong": "#fbfef9",
+        "--surface-grad-start": "rgba(246, 252, 245, 0.96)",
+        "--surface-grad-end": "rgba(223, 239, 224, 0.95)",
+        "--card-grad-start": "rgba(251, 254, 249, 0.98)",
+        "--card-grad-end": "rgba(228, 243, 229, 0.96)",
+        "--text": "#1d2f22",
+        "--muted": "#627566",
+        "--accent": "#2f7d32",
+        "--accent-soft": "#dff0df",
+        "--line": "rgba(29, 47, 34, 0.08)",
+        "--shadow": "0 24px 60px rgba(27, 67, 50, 0.16)",
+        "--theme-glow-left": "rgba(76, 175, 80, 0.18)",
+        "--theme-glow-right": "rgba(27, 67, 50, 0.18)",
+        "--theme-bg-start": "#eff8ee",
+        "--theme-bg-mid": "#dfecde",
+        "--theme-bg-end": "#cfdfcf"
+      }
+    };
+
+    const root = document.documentElement;
+    const body = document.body;
+    const buttons = document.querySelectorAll(".theme-btn");
+    const sheetGrid = document.getElementById("sheetGrid");
+    const podiumBoard = document.getElementById("podiumBoard");
+    const rankingBoard = document.getElementById("rankingBoard");
+    const employeeSearchInput = document.getElementById("employeeSearchInput");
+    const searchResultText = document.getElementById("searchResultText");
+    const summaryEmployees = document.getElementById("summaryEmployees");
+    const summaryPoints = document.getElementById("summaryPoints");
+    const summaryAverage = document.getElementById("summaryAverage");
+    const summaryHighest = document.getElementById("summaryHighest");
+    const summaryHighestName = document.getElementById("summaryHighestName");
+    const performanceChart = document.getElementById("performanceChart");
+    const chartMetaText = document.getElementById("chartMetaText");
+    const editorToggle = document.getElementById("editorToggle");
+    const modeIndicator = document.getElementById("modeIndicator");
+    const userKeyInput = document.getElementById("userKeyInput");
+    const backupBtn = document.getElementById("backupBtn");
+    const restoreBtn = document.getElementById("restoreBtn");
+    const restoreFileInput = document.getElementById("restoreFileInput");
+    const resetBtn = document.getElementById("resetBtn");
+    const saveStatus = document.getElementById("saveStatus");
+    const loadCloudBtn = document.getElementById("loadCloudBtn");
+    const saveCloudBtn = document.getElementById("saveCloudBtn");
+    const resetCloudBtn = document.getElementById("resetCloudBtn");
+    const EDITOR_PASSWORD = "warehouse123";
+    const EDITOR_STORAGE_KEY = "kpiWarehouseEditorMode";
+    const ACTIVE_USER_STORAGE_KEY = "kpiWarehouseActiveUser";
+    const KPI_STORAGE_PREFIX = "kpiWarehouseFormData";
+    const CLOUD_SYNC_ENABLED_KEY = "kpiWarehouseCloudSyncEnabled";
+    let currentSearchTerm = "";
+
+    const slugifyName = (name) => name
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+
+    const getInitials = (name) => name
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() || "")
+      .join("");
+
+    const sanitizeUserKey = (value) => {
+      const normalized = (value || "").trim().toLowerCase().replace(/[^a-z0-9_-]+/g, "-");
+      return normalized || "default";
+    };
+
+    const getActiveUserKey = () => sanitizeUserKey(userKeyInput.value);
+
+    const getScopedStorageKey = (userKey = getActiveUserKey()) => `${KPI_STORAGE_PREFIX}:${userKey}`;
+
+    const updateSaveStatus = (message) => {
+      saveStatus.textContent = message;
+    };
+
+    const setCloudButtonsState = (disabled, labelMap = {}) => {
+      if (loadCloudBtn) loadCloudBtn.disabled = disabled;
+      if (saveCloudBtn) saveCloudBtn.disabled = disabled;
+      if (resetCloudBtn) resetCloudBtn.disabled = disabled;
+      if (labelMap.load && loadCloudBtn) loadCloudBtn.textContent = labelMap.load;
+      if (labelMap.save && saveCloudBtn) saveCloudBtn.textContent = labelMap.save;
+      if (labelMap.reset && resetCloudBtn) resetCloudBtn.textContent = labelMap.reset;
+    };
+
+    const buildKpiPayload = () => ({
+      userKey: getActiveUserKey(),
+      savedAt: new Date().toISOString(),
+      employees: employeeRecords.map((employee) => {
+        const scoreInputs = Array.from(
+          sheetGrid.querySelectorAll(`.score-input[data-employee-id="${employee.id}"]`)
+        ).map((input) => input.value);
+
+        return {
+          id: employee.id,
+          originalName: employee.name,
+          displayName: employee.displayName,
+          position: employee.position,
+          period: employee.period,
+          totalScore: employee.totalScore,
+          scores: scoreInputs
+        };
+      })
+    });
+
+    const statusLabel = (position) => {
+      if (position === 1) return "Top Rank";
+      if (position === 2) return "Runner Up";
+      if (position === 3) return "Top 3";
+      return "Aktif";
+    };
+
+    const statusClass = (position) => {
+      if (position === 1) return "top";
+      if (position === 2) return "rise";
+      if (position === 3) return "empty";
+      return "rise";
+    };
+
+    const getPodiumDescription = (position, score) => {
+      if (position === 1) return `Memimpin leaderboard sementara dengan total ${score} poin KPI.`;
+      if (position === 2) return `Berada di posisi kedua sementara dengan total ${score} poin KPI.`;
+      return `Menempati posisi ketiga sementara dengan total ${score} poin KPI.`;
+    };
+
+    const matchesSearch = (employee, searchTerm = currentSearchTerm) => {
+      const normalizedTerm = String(searchTerm || "").trim().toLowerCase();
+      if (!normalizedTerm) return true;
+
+      return [
+        employee.name,
+        employee.displayName,
+        employee.position,
+        employee.period
+      ]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(normalizedTerm));
+    };
+
+    const buildAvatar = (employee, type) => {
+      const wrapperClass = type === "winner" ? "winner-avatar" : "list-avatar";
+      const imageClass = type === "winner" ? "winner-photo" : "list-photo";
+      const altText = `Foto ${employee.name}`;
+      return `
+        <span class="${wrapperClass}" data-avatar="${employee.slug}">
+          <img
+            class="${imageClass}"
+            src="asset/photo/${employee.slug}.png"
+            alt="${altText}"
+            loading="lazy"
+            onerror="this.parentElement.classList.add('is-fallback')"
+          >
+          <span class="avatar-fallback">${employee.initials}</span>
+        </span>
+      `;
+    };
+
+    const employeeRecords = employees.map((employee, index) => ({
+      ...employee,
+      id: index,
+      slug: slugifyName(employee.name),
+      initials: getInitials(employee.name),
+      displayName: employee.name,
+      position: "Warehouse",
+      period: "",
+      totalScore: 0
+    }));
+
+    const resetEmployeeRecords = () => {
+      employeeRecords.forEach((employee) => {
+        employee.displayName = employee.name;
+        employee.position = "Warehouse";
+        employee.period = "";
+        employee.initials = getInitials(employee.name);
+        employee.totalScore = 0;
+      });
+    };
+
+    const saveKpiData = () => {
+      const payload = buildKpiPayload();
+
+      localStorage.setItem(getScopedStorageKey(), JSON.stringify(payload));
+      updateSaveStatus(`Tersimpan untuk user "${payload.userKey}"`);
+    };
+
+    const syncEmployeeMetaUI = (employeeId) => {
+      const employee = employeeRecords.find((item) => item.id === employeeId);
+      if (!employee) return;
+
+      const captionNode = document.querySelector(`[data-caption-name="${employeeId}"]`);
+      if (captionNode) {
+        captionNode.textContent = `${String(employeeId + 1).padStart(2, "0")}. ${employee.displayName || employee.name}`;
+      }
+
+      const displayNameInput = sheetGrid.querySelector(`.meta-input[data-employee-id="${employee.id}"][data-meta-field="displayName"]`);
+      const positionInput = sheetGrid.querySelector(`.meta-input[data-employee-id="${employee.id}"][data-meta-field="position"]`);
+      const periodInput = sheetGrid.querySelector(`.meta-input[data-employee-id="${employee.id}"][data-meta-field="period"]`);
+
+      if (displayNameInput instanceof HTMLInputElement) displayNameInput.value = employee.displayName;
+      if (positionInput instanceof HTMLInputElement) positionInput.value = employee.position;
+      if (periodInput instanceof HTMLInputElement) periodInput.value = employee.period;
+    };
+
+    const recalculateEmployeeTotal = (employeeId) => {
+      const employee = employeeRecords.find((item) => item.id === employeeId);
+      if (!employee) return;
+
+      const employeeInputs = sheetGrid.querySelectorAll(`.score-input[data-employee-id="${employeeId}"]`);
+      let total = 0;
+
+      employeeInputs.forEach((input) => {
+        if (!(input instanceof HTMLInputElement)) return;
+        const numericInput = Number(input.value) || 0;
+        const weight = Number(input.dataset.weight) || 1;
+        total += numericInput * weight;
+      });
+
+      employee.totalScore = total;
+
+      const totalNode = document.querySelector(`[data-total-for="${employeeId}"]`);
+      if (totalNode) {
+        totalNode.textContent = String(total);
+      }
+    };
+
+    const applyEmployeePayload = (payloadEmployees = []) => {
+      resetEmployeeRecords();
+
+      const allMetaInputs = sheetGrid.querySelectorAll(".meta-input");
+      const allScoreInputs = sheetGrid.querySelectorAll(".score-input");
+
+      allMetaInputs.forEach((input) => {
+        if (input instanceof HTMLInputElement) input.value = "";
+      });
+
+      allScoreInputs.forEach((input) => {
+        if (input instanceof HTMLInputElement) input.value = "";
+      });
+
+      employeeRecords.forEach((employee) => {
+        employee.displayName = employee.name;
+        employee.position = "Warehouse";
+        employee.period = "";
+        employee.initials = getInitials(employee.name);
+      });
+
+      payloadEmployees.forEach((savedEmployee) => {
+        const employee = employeeRecords.find((item) => item.id === savedEmployee.id);
+        if (!employee) return;
+
+        employee.displayName = savedEmployee.displayName || employee.name;
+        employee.position = savedEmployee.position ?? "Warehouse";
+        employee.period = savedEmployee.period ?? "";
+        employee.initials = getInitials(employee.displayName || employee.name);
+
+        syncEmployeeMetaUI(employee.id);
+
+        if (Array.isArray(savedEmployee.scores)) {
+          const scoreInputs = sheetGrid.querySelectorAll(`.score-input[data-employee-id="${employee.id}"]`);
+          scoreInputs.forEach((input, index) => {
+            if (!(input instanceof HTMLInputElement)) return;
+            input.value = savedEmployee.scores[index] ?? "";
+          });
+        }
+
+        recalculateEmployeeTotal(employee.id);
+      });
+
+      employeeRecords.forEach((employee) => {
+        syncEmployeeMetaUI(employee.id);
+        recalculateEmployeeTotal(employee.id);
+      });
+
+      renderLeaderboard();
+      renderAnalytics();
+    };
+
+    const loadKpiDataForUser = (userKey = getActiveUserKey()) => {
+      const rawData = localStorage.getItem(getScopedStorageKey(userKey));
+      if (!rawData) {
+        applyEmployeePayload([]);
+        updateSaveStatus(`Belum ada data tersimpan untuk user "${userKey}"`);
+        return;
+      }
+
+      try {
+        const parsedData = JSON.parse(rawData);
+        applyEmployeePayload(parsedData.employees || []);
+        updateSaveStatus(`Data dimuat untuk user "${userKey}"`);
+      } catch (error) {
+        console.error("Gagal memuat data KPI dari localStorage.", error);
+        updateSaveStatus(`Gagal memuat data user "${userKey}"`);
+      }
+    };
+
+    const saveToCloud = async () => {
+      const payload = buildKpiPayload();
+      const previousLabel = saveCloudBtn.textContent;
+      setCloudButtonsState(true, { save: "Saving..." });
+
+      try {
+        const response = await fetch(`/api/kpi-data?userKey=${encodeURIComponent(payload.userKey)}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        if (!response.ok || result.ok === false) {
+          throw new Error(result.message || "Gagal menyimpan data cloud.");
+        }
+
+        localStorage.setItem(CLOUD_SYNC_ENABLED_KEY, "true");
+        updateSaveStatus(`Cloud save berhasil untuk user "${payload.userKey}"`);
+      } catch (error) {
+        console.error("Gagal save ke Vercel Blob.", error);
+        window.alert(`Gagal save ke cloud: ${error.message}`);
+        updateSaveStatus("Cloud save gagal");
+      } finally {
+        setCloudButtonsState(false, { save: previousLabel });
+      }
+    };
+
+    const loadFromCloud = async (userKey = getActiveUserKey(), { silent = false } = {}) => {
+      const previousLabel = loadCloudBtn.textContent;
+      setCloudButtonsState(true, { load: "Loading..." });
+
+      try {
+        const response = await fetch(`/api/kpi-data?userKey=${encodeURIComponent(userKey)}`, {
+          method: "GET"
+        });
+
+        const result = await response.json();
+        if (!response.ok || result.ok === false) {
+          throw new Error(result.message || "Gagal memuat data cloud.");
+        }
+
+        if (result.payload?.employees) {
+          localStorage.setItem(getScopedStorageKey(userKey), JSON.stringify(result.payload));
+          applyEmployeePayload(result.payload.employees);
+          updateSaveStatus(`Cloud load berhasil untuk user "${userKey}"`);
+        } else if (!silent) {
+          updateSaveStatus(`Cloud kosong untuk user "${userKey}"`);
+        }
+      } catch (error) {
+        console.error("Gagal load dari Vercel Blob.", error);
+        if (!silent) {
+          window.alert(`Gagal load dari cloud: ${error.message}`);
+          updateSaveStatus("Cloud load gagal");
+        }
+      } finally {
+        setCloudButtonsState(false, { load: previousLabel });
+      }
+    };
+
+    const resetCloudData = async (userKey = getActiveUserKey()) => {
+      const confirmed = window.confirm(`Hapus data cloud untuk user "${userKey}"?`);
+      if (!confirmed) return;
+
+      const previousLabel = resetCloudBtn.textContent;
+      setCloudButtonsState(true, { reset: "Resetting..." });
+
+      try {
+        const response = await fetch(`/api/kpi-data?userKey=${encodeURIComponent(userKey)}`, {
+          method: "DELETE"
+        });
+
+        const result = await response.json();
+        if (!response.ok || result.ok === false) {
+          throw new Error(result.message || "Gagal reset data cloud.");
+        }
+
+        updateSaveStatus(`Data cloud user "${userKey}" berhasil dihapus`);
+      } catch (error) {
+        console.error("Gagal reset data Vercel Blob.", error);
+        window.alert(`Gagal reset cloud: ${error.message}`);
+        updateSaveStatus("Cloud reset gagal");
+      } finally {
+        setCloudButtonsState(false, { reset: previousLabel });
+      }
+    };
+
+    const setEditorMode = (enabled) => {
+      body.classList.toggle("editor-mode", enabled);
+      body.classList.toggle("viewer-mode", !enabled);
+
+      const inputs = sheetGrid.querySelectorAll(".score-input, .meta-input");
+      inputs.forEach((input) => {
+        input.readOnly = !enabled;
+        input.tabIndex = enabled ? 0 : -1;
+      });
+
+      modeIndicator.textContent = enabled ? "Mode Editor" : "Mode Viewer";
+      editorToggle.textContent = enabled ? "Keluar Editor" : "Masuk Editor";
+      localStorage.setItem(EDITOR_STORAGE_KEY, enabled ? "true" : "false");
+    };
+
+    const buildEmployeeSheet = (employee, index) => {
+      const page = document.createElement("article");
+      page.className = "sheet-page";
+      page.dataset.employeeId = String(employee.id);
+
+      const rows = Array.from({ length: 31 }, (_, dayIndex) => {
+        const scoreCells = criteria.map((_, criterionIndex) => `
+          <td class="score-cell">
+            <input
+              class="score-input"
+              type="number"
+              min="0"
+              step="1"
+              inputmode="numeric"
+              data-employee-id="${employee.id}"
+              data-weight="${criteriaWeights[criterionIndex]}"
+              aria-label="${employee.name} ${criteria[criterionIndex]} hari ${dayIndex + 1}"
+            >
+          </td>
+        `).join("");
+        return `
+          <tr>
+            <td class="day-cell">${dayIndex + 1}</td>
+            ${scoreCells}
+          </tr>
+        `;
+      }).join("");
+
+      page.innerHTML = `
+        <div class="sheet-scroll">
+          <table class="kpi-sheet" aria-label="Form penilaian ${employee.name}">
+            <tr>
+              <td class="sheet-code">IX/IV/26</td>
+              <td class="sheet-title" colspan="${criteria.length}">QUALITY PERFORMANCE INDICATOR/QPI WAREHOUSE</td>
+            </tr>
+            <tr>
+              <td class="meta-label">NAMA :</td>
+              <td class="meta-value employee-highlight">
+                <input
+                  class="meta-input"
+                  type="text"
+                  value="${employee.displayName}"
+                  data-meta-field="displayName"
+                  data-employee-id="${employee.id}"
+                  aria-label="Nama karyawan ${employee.name}"
+                >
+              </td>
+              <td class="meta-fill"></td>
+              <td class="meta-fill"></td>
+              <td class="meta-fill"></td>
+              <td class="meta-fill"></td>
+              <td class="meta-fill"></td>
+              <td class="meta-fill"></td>
+              <td class="meta-fill"></td>
+              <td class="meta-fill"></td>
+            </tr>
+            <tr>
+              <td class="meta-label">POSISI :</td>
+              <td class="meta-value">
+                <input
+                  class="meta-input"
+                  type="text"
+                  value="${employee.position}"
+                  data-meta-field="position"
+                  data-employee-id="${employee.id}"
+                  aria-label="Posisi karyawan ${employee.name}"
+                >
+              </td>
+              <td class="meta-fill"></td>
+              <td class="meta-fill"></td>
+              <td class="meta-fill"></td>
+              <td class="meta-fill"></td>
+              <td class="meta-fill"></td>
+              <td class="meta-fill"></td>
+              <td class="meta-fill"></td>
+              <td class="meta-fill"></td>
+            </tr>
+            <tr>
+              <td class="meta-label">PERIODE :</td>
+              <td class="meta-value">
+                <input
+                  class="meta-input period-input"
+                  type="text"
+                  value="${employee.period}"
+                  placeholder="________________"
+                  data-meta-field="period"
+                  data-employee-id="${employee.id}"
+                  aria-label="Periode penilaian ${employee.name}"
+                >
+              </td>
+              <td class="meta-fill"></td>
+              <td class="meta-fill"></td>
+              <td class="meta-fill"></td>
+              <td class="meta-fill"></td>
+              <td class="meta-fill"></td>
+              <td class="meta-fill"></td>
+              <td class="meta-fill"></td>
+              <td class="meta-fill"></td>
+            </tr>
+            <tr>
+              <th class="criteria-head tgl-head">TGL</th>
+              ${criteria.map((item) => `<th class="criteria-head">${item}</th>`).join("")}
+            </tr>
+            ${rows}
+          </table>
+        </div>
+        <div class="sheet-caption">
+          <strong data-caption-name="${employee.id}">${String(index + 1).padStart(2, "0")}. ${employee.displayName}</strong>
+          <span>Total sementara: <strong data-total-for="${employee.id}">0</strong> poin</span>
+        </div>
+      `;
+
+      return page;
+    };
+
+    const renderLeaderboard = () => {
+      const ranking = [...employeeRecords].sort((a, b) => {
+        if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
+        return a.id - b.id;
+      });
+
+      const filteredRanking = ranking.filter((employee) => matchesSearch(employee));
+      const topThree = filteredRanking.slice(0, 3);
+      const podiumOrder = [1, 0, 2].map((index) => topThree[index]).filter(Boolean);
+
+      podiumBoard.innerHTML = podiumOrder.length > 0
+        ? podiumOrder.map((employee, visualIndex) => {
+            const actualPosition = visualIndex === 0 ? 2 : visualIndex === 1 ? 1 : 3;
+            return `
+              <div class="winner rank-${actualPosition}">
+                <div class="badge">#${actualPosition}</div>
+                ${buildAvatar(employee, "winner")}
+                <h2>${employee.displayName}</h2>
+                <p>${getPodiumDescription(actualPosition, employee.totalScore)}</p>
+              </div>
+            `;
+          }).join("")
+        : `
+          <div class="winner rank-1" style="grid-column: 1 / -1; min-height: 180px;">
+            <div class="badge">#</div>
+            <h2>Tidak ada hasil</h2>
+            <p>Nama yang dicari belum ditemukan pada leaderboard saat ini.</p>
+          </div>
+        `;
+
+      rankingBoard.innerHTML = filteredRanking.slice(0, 10).map((employee, index) => `
+        <div class="row">
+          <div class="place">${String(index + 1).padStart(2, "0")}</div>
+          <div class="identity">
+            <div class="identity-main">
+              ${buildAvatar(employee, "list")}
+              <div class="name-block">
+                <strong>${employee.displayName}</strong>
+                <span>${index === 0 ? `Peringkat pertama <span class="spark">+</span>` : `Posisi ke-${index + 1}`}</span>
+              </div>
+            </div>
+          </div>
+          <div class="points">${employee.totalScore} Poin</div>
+          <div class="status ${statusClass(index + 1)}">${statusLabel(index + 1)}</div>
+        </div>
+      `).join("") || `
+        <div class="row">
+          <div class="place">--</div>
+          <div class="identity">
+            <strong>Tidak ada hasil pencarian</strong>
+            <span>Coba kata kunci lain untuk melihat karyawan yang sesuai.</span>
+          </div>
+          <div class="points">0 Poin</div>
+          <div class="status empty">Empty</div>
+        </div>
+      `;
+
+      document.querySelectorAll(".sheet-page").forEach((page) => {
+        const employeeId = Number(page.dataset.employeeId);
+        const employee = employeeRecords.find((item) => item.id === employeeId);
+        if (!employee) return;
+        page.style.display = matchesSearch(employee) ? "" : "none";
+      });
+    };
+
+    const renderSummary = () => {
+      const filteredEmployees = employeeRecords.filter((employee) => matchesSearch(employee));
+      const totalEmployees = filteredEmployees.length;
+      const totalPoints = filteredEmployees.reduce((sum, employee) => sum + employee.totalScore, 0);
+      const averagePoints = totalEmployees > 0 ? (totalPoints / totalEmployees).toFixed(1) : "0";
+      const highestEmployee = [...filteredEmployees].sort((a, b) => b.totalScore - a.totalScore || a.id - b.id)[0];
+
+      summaryEmployees.textContent = String(totalEmployees);
+      summaryPoints.textContent = String(totalPoints);
+      summaryAverage.textContent = String(averagePoints);
+      summaryHighest.textContent = String(highestEmployee?.totalScore ?? 0);
+      summaryHighestName.textContent = highestEmployee
+        ? `${highestEmployee.displayName} memimpin saat ini`
+        : "Belum ada data";
+    };
+
+    const renderPerformanceChart = () => {
+      const filteredEmployees = employeeRecords
+        .filter((employee) => matchesSearch(employee))
+        .sort((a, b) => b.totalScore - a.totalScore || a.id - b.id)
+        .slice(0, 10);
+
+      const maxScore = Math.max(...filteredEmployees.map((employee) => employee.totalScore), 1);
+      chartMetaText.textContent = filteredEmployees.length > 0
+        ? `Top ${filteredEmployees.length} karyawan`
+        : "Tidak ada data";
+
+      performanceChart.innerHTML = filteredEmployees.map((employee) => {
+        const width = Math.max((employee.totalScore / maxScore) * 100, employee.totalScore > 0 ? 8 : 0);
+        return `
+          <div class="chart-row">
+            <div class="chart-name">${employee.displayName}</div>
+            <div class="chart-bar-track">
+              <div class="chart-bar-fill" style="width:${width}%;"></div>
+            </div>
+            <div class="chart-score">${employee.totalScore}</div>
+          </div>
+        `;
+      }).join("") || `
+        <div class="search-result">Belum ada data yang cocok untuk ditampilkan pada grafik.</div>
+      `;
+    };
+
+    const renderAnalytics = () => {
+      const filteredEmployees = employeeRecords.filter((employee) => matchesSearch(employee));
+      if (!currentSearchTerm) {
+        searchResultText.textContent = `Menampilkan ${filteredEmployees.length} karyawan aktif.`;
+      } else if (filteredEmployees.length === 0) {
+        searchResultText.textContent = `Tidak ada hasil untuk pencarian "${currentSearchTerm}".`;
+      } else {
+        searchResultText.textContent = `Ditemukan ${filteredEmployees.length} karyawan untuk pencarian "${currentSearchTerm}".`;
+      }
+
+      renderSummary();
+      renderPerformanceChart();
+    };
+
+    employeeRecords.forEach((employee, index) => {
+      sheetGrid.appendChild(buildEmployeeSheet(employee, index));
+    });
+
+    const savedActiveUser = localStorage.getItem(ACTIVE_USER_STORAGE_KEY);
+    if (savedActiveUser) {
+      userKeyInput.value = savedActiveUser;
+    }
+
+    setEditorMode(localStorage.getItem(EDITOR_STORAGE_KEY) === "true");
+    loadKpiDataForUser();
+    if (localStorage.getItem(CLOUD_SYNC_ENABLED_KEY) === "true") {
+      loadFromCloud(getActiveUserKey(), { silent: true });
+    }
+    renderAnalytics();
+
+    sheetGrid.addEventListener("input", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement)) return;
+
+      const employeeId = Number(target.dataset.employeeId);
+      const employee = employeeRecords.find((item) => item.id === employeeId);
+      if (!employee) return;
+
+      if (target.classList.contains("meta-input")) {
+        const metaField = target.dataset.metaField;
+        if (!metaField) return;
+
+        employee[metaField] = target.value;
+
+        if (metaField === "displayName") {
+          employee.initials = getInitials(target.value || employee.name);
+        }
+
+        syncEmployeeMetaUI(employeeId);
+        saveKpiData();
+        renderLeaderboard();
+        renderAnalytics();
+        return;
+      }
+
+      if (!target.classList.contains("score-input")) return;
+
+      recalculateEmployeeTotal(employeeId);
+      saveKpiData();
+      renderLeaderboard();
+      renderAnalytics();
+    });
+
+    employeeSearchInput.addEventListener("input", () => {
+      currentSearchTerm = employeeSearchInput.value.trim();
+      renderLeaderboard();
+      renderAnalytics();
+    });
+
+    buttons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const theme = themes[button.dataset.theme];
+        if (!theme) return;
+
+        Object.entries(theme).forEach(([property, value]) => {
+          root.style.setProperty(property, value);
+        });
+
+        buttons.forEach((item) => item.classList.remove("active"));
+        button.classList.add("active");
+      });
+    });
+
+    editorToggle.addEventListener("click", () => {
+      const isEditorMode = body.classList.contains("editor-mode");
+
+      if (isEditorMode) {
+        setEditorMode(false);
+        return;
+      }
+
+      const enteredPassword = window.prompt("Masukkan password editor untuk mengubah tabel:");
+      if (enteredPassword === null) return;
+
+      if (enteredPassword !== EDITOR_PASSWORD) {
+        window.alert("Password editor salah. Halaman tetap dalam mode viewer.");
+        return;
+      }
+
+      setEditorMode(true);
+    });
+
+    userKeyInput.addEventListener("change", () => {
+      const sanitizedKey = getActiveUserKey();
+      userKeyInput.value = sanitizedKey;
+      localStorage.setItem(ACTIVE_USER_STORAGE_KEY, sanitizedKey);
+      loadKpiDataForUser(sanitizedKey);
+    });
+
+    backupBtn.addEventListener("click", () => {
+      const payload = {
+        userKey: getActiveUserKey(),
+        exportedAt: new Date().toISOString(),
+        employees: employeeRecords.map((employee) => {
+          const scoreInputs = Array.from(
+            sheetGrid.querySelectorAll(`.score-input[data-employee-id="${employee.id}"]`)
+          ).map((input) => input.value);
+
+          return {
+            id: employee.id,
+            displayName: employee.displayName,
+            position: employee.position,
+            period: employee.period,
+            scores: scoreInputs
+          };
+        })
+      };
+
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `kpi-warehouse-${payload.userKey}.json`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+      updateSaveStatus(`Backup JSON dibuat untuk user "${payload.userKey}"`);
+    });
+
+    restoreBtn.addEventListener("click", () => {
+      restoreFileInput.click();
+    });
+
+    restoreFileInput.addEventListener("change", async (event) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      try {
+        const text = await file.text();
+        const parsedData = JSON.parse(text);
+        const importedUserKey = sanitizeUserKey(parsedData.userKey || getActiveUserKey());
+        userKeyInput.value = importedUserKey;
+        localStorage.setItem(ACTIVE_USER_STORAGE_KEY, importedUserKey);
+        localStorage.setItem(
+          getScopedStorageKey(importedUserKey),
+          JSON.stringify({
+            userKey: importedUserKey,
+            savedAt: new Date().toISOString(),
+            employees: parsedData.employees || []
+          })
+        );
+        loadKpiDataForUser(importedUserKey);
+        updateSaveStatus(`Restore JSON berhasil untuk user "${importedUserKey}"`);
+      } catch (error) {
+        console.error("Gagal restore file JSON.", error);
+        window.alert("File JSON tidak valid atau tidak bisa dibaca.");
+      } finally {
+        restoreFileInput.value = "";
+      }
+    });
+
+    resetBtn.addEventListener("click", () => {
+      const userKey = getActiveUserKey();
+      const confirmed = window.confirm(`Reset semua data untuk user "${userKey}"?`);
+      if (!confirmed) return;
+
+      localStorage.removeItem(getScopedStorageKey(userKey));
+      applyEmployeePayload([]);
+      updateSaveStatus(`Data user "${userKey}" berhasil direset`);
+    });
+
+    loadCloudBtn.addEventListener("click", () => {
+      loadFromCloud(getActiveUserKey());
+    });
+
+    saveCloudBtn.addEventListener("click", () => {
+      saveToCloud();
+    });
+
+    resetCloudBtn.addEventListener("click", () => {
+      resetCloudData(getActiveUserKey());
+    });
+  </script>
+</body>
+</html>
