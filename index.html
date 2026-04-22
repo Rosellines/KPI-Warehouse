@@ -406,6 +406,7 @@
 
     .avatar-fallback {
       display: none;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       width: 100%;
@@ -414,11 +415,22 @@
       letter-spacing: 0.04em;
       color: rgba(255, 255, 255, 0.94);
       background: linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06));
+      text-align: center;
+      line-height: 1.1;
+      gap: 4px;
     }
 
     .list-avatar .avatar-fallback {
       color: var(--accent);
       background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.66));
+    }
+
+    .avatar-fallback small {
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      opacity: 0.8;
     }
 
     .winner-avatar.is-fallback .avatar-fallback,
@@ -1311,34 +1323,33 @@
   </main>
   <script>
     const employees = [
-      { name: "MAMAN SUHERMAN" },
-      { name: "ARI SUPENDI" },
-      { name: "RAKA N. A" },
-      { name: "NABILA WULANDARI" },
-      { name: "AZIZ A." },
-      { name: "DEL PIERO" },
-      { name: "FAHRUL E." },
-      { name: "YAYAN MAULANA" },
-      { name: "M. REYNALDI" },
-      { name: "RIZKY" },
-      { name: "D. TRILAKSONO" },
-      { name: "ANNA" },
+      { name: "Maman Suherman" },
+      { name: "Ari Supendi" },
+      { name: "Raka N. A" },
+      { name: "Nabila Wulandari" },
+      { name: "Aziz A." },
+      { name: "Del Piero" },
+      { name: "Fahrul E." },
+      { name: "Yayan Maulana" },
+      { name: "M. Reynaldi" },
+      { name: "Rizky" },
+      { name: "D. Trilaksono" },
+      { name: "Anna" },
       { name: "Rifky H." },
-      { name: "DINDA AYU A." },
-      { name: "FIRZA S.S" },
-      { name: "DELLA" },
-      { name: "MAULANA A." },
-      { name: "YUDHA E. P" },
-      { name: "ALIF" },
-      { name: "MUNAWIR" },
-      { name: "FAJAR" },
-      { name: "ABIL" },
-      { name: "WAHYU Y." },
-      { name: "SHEVA" },
-      { name: "EKO J" },
-      { name: "BEDI" },
-      { name: "AGUS" },
-      { name: "RAYA" }
+      { name: "Firza S.S" },
+      { name: "Della" },
+      { name: "Maulana A." },
+      { name: "Yudha E. P" },
+      { name: "Alif" },
+      { name: "Munawir" },
+      { name: "Fajar" },
+      { name: "Abil" },
+      { name: "Wahyu Y." },
+      { name: "Sheva" },
+      { name: "Eko J" },
+      { name: "Bedi" },
+      { name: "Agus" },
+      { name: "Raya" }
     ];
 
     const criteria = [
@@ -1560,17 +1571,18 @@
     const buildAvatar = (employee, type) => {
       const wrapperClass = type === "winner" ? "winner-avatar" : "list-avatar";
       const imageClass = type === "winner" ? "winner-photo" : "list-photo";
-      const altText = `Foto ${employee.name}`;
+      const altText = `Foto ${employee.displayName || employee.name}`;
+      const photoSrc = employee.photoPath;
       return `
         <span class="${wrapperClass}" data-avatar="${employee.slug}">
           <img
             class="${imageClass}"
-            src="asset/photo/${employee.slug}.png"
+            src="${photoSrc}"
             alt="${altText}"
             loading="lazy"
             onerror="this.parentElement.classList.add('is-fallback')"
           >
-          <span class="avatar-fallback">${employee.initials}</span>
+          <span class="avatar-fallback">${employee.initials}<small>No Photo</small></span>
         </span>
       `;
     };
@@ -1579,6 +1591,7 @@
       ...employee,
       id: index,
       slug: slugifyName(employee.name),
+      photoPath: `asset/photo/${slugifyName(employee.name)}.png`,
       initials: getInitials(employee.name),
       displayName: employee.name,
       position: "Warehouse",
